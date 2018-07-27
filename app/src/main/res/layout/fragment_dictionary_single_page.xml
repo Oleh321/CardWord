@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="500dp">
+
+    <LinearLayout
+        android:orientation="vertical"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <ImageView
+            android:id="@+id/fg_dictionary_single_page_image_not_found"
+            android:visibility="gone"
+            android:layout_gravity="center"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="30dp"
+            android:src="@drawable/thinking" />
+
+        <TextView
+            android:visibility="gone"
+            android:id="@+id/fg_dictionary_single_page_text_not_found"
+            android:textStyle="bold"
+            android:textSize="30sp"
+            android:text="Not found"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:layout_gravity="center"/>
+
+    </LinearLayout>
+
+   <android.support.v7.widget.RecyclerView
+       android:nestedScrollingEnabled="false"
+       android:id="@+id/fg_dictionary_single_page_recycler_view"
+       android:layout_width="match_parent"
+       android:layout_height="wrap_content"/>
+
+</FrameLayout>

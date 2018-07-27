@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragment.TodayRateFragment">
+
+   <RelativeLayout
+       android:layout_width="match_parent"
+       android:layout_height="match_parent">
+
+
+       <TextView
+           android:id="@+id/fg_daily_rate_label"
+           android:textSize="18sp"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_alignParentTop="true"
+           android:layout_centerHorizontal="true"
+           android:layout_marginTop="50dp"
+           android:text="Количество слов на сегодня" />
+
+       <TextView
+           android:textColor="@color/black"
+           android:id="@+id/fg_daily_rate_amount"
+           android:layout_below="@+id/fg_daily_rate_label"
+           android:layout_width="wrap_content"
+           android:layout_height="wrap_content"
+           android:layout_centerHorizontal="true"
+           android:layout_marginTop="60dp"
+           android:gravity="center"
+           android:text="65"
+           android:textSize="100sp" />
+
+       <Button
+           android:text="Просмотр"
+           android:layout_marginLeft="20dp"
+           android:layout_marginRight="20dp"
+           android:id="@+id/fg_daily_rate_btn_preview"
+           android:layout_below="@+id/fg_daily_rate_amount"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:layout_marginTop="60dp" />
+
+       <Button
+           android:text="Обучение"
+           android:layout_marginLeft="20dp"
+           android:layout_marginRight="20dp"
+           android:id="@+id/fg_daily_rate_btn_test"
+           android:layout_below="@+id/fg_daily_rate_btn_preview"
+           android:layout_width="match_parent"
+           android:layout_height="wrap_content"
+           android:layout_marginTop="10dp" />
+   </RelativeLayout>
+
+</FrameLayout>

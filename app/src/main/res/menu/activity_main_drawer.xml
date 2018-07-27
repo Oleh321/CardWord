@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+
+        <item android:id="@+id/nav_daily_rate"
+            android:title="@string/daily_rate"/>
+
+        <item android:id="@+id/nav_wordlist"
+            android:title="@string/wordlist"/>
+
+        <item android:id="@+id/nav_add_card"
+            android:title="@string/create_card"/>
+
+        <item android:id="@+id/nav_dictionary"
+            android:title="@string/dictionary"/>
+
+        <item android:id="@+id/nav_settings"
+            android:title="@string/Settings"/>
+
+
+    </group>
+
+</menu>
