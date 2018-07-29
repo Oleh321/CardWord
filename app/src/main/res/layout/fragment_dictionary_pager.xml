@@ -1,44 +1,78 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
 
-  <ScrollView
-      android:scrollbars="vertical"
-      android:fillViewport="true"
-      android:layout_width="match_parent"
-      android:layout_height="match_parent">
-
-    <LinearLayout
+    <ScrollView
+        android:id="@+id/fg_dictionary_pager_scroll_view"
+        android:fillViewport="true"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:layout_height="match_parent">
 
-      <EditText
-          android:visibility="gone"
-          android:id="@+id/fg_dictionary_pager_et_search"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content"
-          android:layout_margin="10dp"
-          android:hint="Поиск.." />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
+            <android.support.design.widget.AppBarLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/fg_dictionary_pager_app_bar_layout">
 
-      <android.support.v4.view.ViewPager
-          android:nestedScrollingEnabled="false"
-          android:id="@+id/fg_dictionary_pager_view_pager"
-          android:layout_width="match_parent"
-          android:layout_height="wrap_content">
+                <EditText
+                    android:textColorHint="@color/light_grey"
+                    android:textColor="@color/white"
+                    android:visibility="gone"
+                    android:id="@+id/fg_dictionary_pager_et_search"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="10dp" />
 
-          <android.support.v4.view.PagerTabStrip
-              android:id="@+id/fg_dictionary_pager_pager_tab_strip"
-              android:layout_width="match_parent"
-              android:layout_height="wrap_content"
-              android:layout_gravity="top"/>
+                <android.support.design.widget.TabLayout
+                    android:id="@+id/fg_dictionary_pager_tabs"
+                    app:tabTextColor="@color/white"
+                    app:tabSelectedTextColor="@color/colorAccent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"/>
 
-      </android.support.v4.view.ViewPager>
+            </android.support.design.widget.AppBarLayout>
 
-    </LinearLayout>
+            <LinearLayout
+                android:layout_below="@+id/fg_dictionary_pager_app_bar_layout"
+                android:orientation="vertical"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
 
-  </ScrollView>
+                <ImageView
+                    android:id="@+id/fg_dictionary_pager_image_not_found"
+                    android:visibility="gone"
+                    android:layout_gravity="center"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="30dp"
+                    android:src="@drawable/thinking" />
 
+                <TextView
+                    android:visibility="gone"
+                    android:id="@+id/fg_dictionary_pager_text_not_found"
+                    android:textStyle="bold"
+                    android:textSize="30sp"
+                    android:text="Not found"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="10dp"
+                    android:layout_gravity="center"/>
+
+            </LinearLayout>
+
+            <android.support.v7.widget.RecyclerView
+
+                android:layout_below="@+id/fg_dictionary_pager_app_bar_layout"
+                android:nestedScrollingEnabled="false"
+                android:id="@+id/fg_dictionary_pager_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"/>
+
+        </RelativeLayout>
+    </ScrollView>
 </FrameLayout>

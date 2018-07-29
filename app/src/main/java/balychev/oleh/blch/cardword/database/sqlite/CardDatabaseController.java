@@ -222,7 +222,7 @@ public class CardDatabaseController {
         return cards;
     }
 
-    public ArrayList<Card> getCardsByWord(StateCardVariant state, String word)  {
+    public ArrayList<Card> getCardsByWord(StateCardVariant state, String word, int option)  {
         String[] viewColumns = {
                 DBColumns.COLUMN_CARD_ID,
                 DBColumns.COLUMN_FRONT_SIDE,
@@ -234,9 +234,16 @@ public class CardDatabaseController {
 
         ArrayList<Card> cards = new ArrayList<>();
 
+        String selection = null;
+        if (option == 0){
+            selection = DBColumns.COLUMN_FRONT_SIDE + " Like '%" + word + "%'";
+        } else if(option == 1){
+            selection = DBColumns.COLUMN_BACK_SIDE + " Like '%" + word + "%'";
+        }
+
         Cursor repeatCursor = mDatabase.query(DBColumns.VIEW_CARD,
                 viewColumns,
-                DBColumns.COLUMN_FRONT_SIDE + " Like '%" + word + "%'",
+                selection,
                 null,
                 null,
                 null,
