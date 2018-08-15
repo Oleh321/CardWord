@@ -1,6 +1,7 @@
 package balychev.oleh.blch.cardword.fragment;
 
 
+import android.database.Cursor;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,6 +19,7 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import balychev.oleh.blch.cardword.R;
+import balychev.oleh.blch.cardword.data.CardCursorLab;
 import balychev.oleh.blch.cardword.database.sqlite.CardDatabaseController;
 import balychev.oleh.blch.cardword.model.Word;
 import balychev.oleh.blch.cardword.utils.SystemUtils;
@@ -44,7 +46,7 @@ public class AddCardFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mController = new CardDatabaseController(getActivity().getApplicationContext());
+        mController = new CardDatabaseController(getContext());
         setHasOptionsMenu(true);
     }
 
@@ -94,12 +96,13 @@ public class AddCardFragment extends Fragment {
             SystemUtils.hideKeyBoard(getActivity());
 
             // TODO предоставить выбор пользователю
-            if (mController.getCardByWord(mWordEditText.getText().toString().trim()) != null){
+            Cursor cursor = mController.getCardByWord(mWordEditText.getText().toString().trim());
+            if (cursor.getCount() != 0){
                 Toast.makeText(getActivity(), "Такое слово уже есть.", Toast.LENGTH_SHORT).show();
                 return true;
             }
 
-            mController.addCard(new Word(
+            mController.addNewCard(new Word(
                 mWordEditText.getText().toString().trim(),
                 mDefinitionEditText.getText().toString().trim()
             ));

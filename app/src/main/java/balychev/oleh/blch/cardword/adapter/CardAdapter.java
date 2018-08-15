@@ -1,9 +1,13 @@
 package balychev.oleh.blch.cardword.adapter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.drawable.Drawable;
+import android.nfc.Tag;
+import android.os.AsyncTask;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -22,42 +26,75 @@ import java.util.zip.Inflater;
 import balychev.oleh.blch.cardword.R;
 import balychev.oleh.blch.cardword.database.sqlite.CardDatabaseController;
 import balychev.oleh.blch.cardword.model.Card;
+import balychev.oleh.blch.cardword.utils.StateCardVariant;
 
 
-public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder> {
+public class CardAdapter extends AbstractCursorRecyclerViewAdapter<CardAdapter.CardViewHolder>{
 
-    private Context mContext;
-    private ArrayList<Card> mCards;
+    private StateCardVariant mCurrentVariant;
 
-    public CardAdapter(Context context, ArrayList<Card> cards) {
-        this.mContext = context;
-        this.mCards = cards;
+    public void setCurrentVariant(StateCardVariant currentVariant) {
+        mCurrentVariant = currentVariant;
     }
 
-    public void setCards(ArrayList<Card> cards) {
-        mCards = cards;
+    public CardAdapter(Context context, Cursor cursor, StateCardVariant variant) {
+        super(context, cursor);
+        this.mCurrentVariant = variant;
     }
 
-    public ArrayList<Card> getCards(){
-        return mCards;
-    }
-
+    /*  @SuppressLint("StaticFieldLeak")
     private void deleteCard(int cardPosition){
-        CardDatabaseController controller = new CardDatabaseController(mContext);
-        controller.deleteCard(mCards.get(cardPosition).getId());
-        mCards.remove(cardPosition);
-        controller.close();
-        notifyDataSetChanged();
+        new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... voids) {
+                CardDatabaseController controller = new CardDatabaseController(mContext);
+               // mCursor.moveToPosition(cardPosition);
+                controller.deleteCard(getItemId(cardPosition));
+                controller.close();
+                return null;
+            }
+        };
     }
 
+    @SuppressLint("StaticFieldLeak")
     private void resetProgress(int position, ImageView imageView) {
-        CardDatabaseController controller = new CardDatabaseController(mContext);
-        controller.setCardState(mCards.get(position).getId(), 0);
-        controller.close();
-        setIcon(mCards.get(position).getState(), imageView);
-        notifyDataSetChanged();
+        new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... voids) {
+                CardDatabaseController controller = new CardDatabaseController(mContext);
+                controller.resetProgress(mCards.get(position).getId());
+                controller.close();
+                return null;
+            }
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                mCards.get(position).setState(0);
+                setIcon(mCards.get(position).getState(), imageView);
+            }
+        };
     }
 
+    @SuppressLint("StaticFieldLeak")
+    private void markAsLearned(int position, ImageView imageView){
+        new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... voids) {
+                CardDatabaseController controller = new CardDatabaseController(mContext);
+                controller.markAsLearned(mCards.get(position).getId());
+                controller.close();
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+                mCards.get(position).setState(null);
+                setIcon(mCards.get(position).getState(), imageView);
+            }
+        };
+    }
+*/
     private void setIcon(Integer state, ImageView imageView){
         Drawable drawable = null;
 
@@ -97,27 +134,22 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
         return new CardViewHolder(view);
     }
 
-    @Override
-    public void onBindViewHolder(@NonNull final CardViewHolder holder, final int position) {
-        Card card = mCards.get(position);
-
-        holder.mPosition = position;
-        holder.mWordText.setText(card.getFrontSide());
-        holder.mDefinitionText.setText(card.getBackSide());
-        holder.mDateAddText.setText(card.getDateAdd());
-
-        setIcon(card.getState(), holder.mProgressImage);
-
-    }
 
     @Override
-    public int getItemCount() {
-        return mCards.size();
+    public void onBindViewHolder(CardViewHolder viewHolder, int position, Cursor cursor) {
+        Card card =Card.parseCursor(cursor);
+        viewHolder.mView.setVisibility(View.VISIBLE);
+        viewHolder.mPosition = position;
+        viewHolder.mWordText.setText(card.getFrontSide());
+        viewHolder.mDefinitionText.setText(card.getBackSide());
+        viewHolder.mDateAddText.setText(Card.getDateInFormat(card.getDateAdd()));
+
+        setIcon(card.getState(), viewHolder.mProgressImage);
     }
 
 
     public class CardViewHolder extends RecyclerView.ViewHolder
-            implements View.OnCreateContextMenuListener, MenuItem.OnMenuItemClickListener  {
+            implements View.OnCreateContextMenuListener /*, MenuItem.OnMenuItemClickListener */ {
 
         private int mPosition;
 
@@ -127,6 +159,10 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
         private TextView mDateAddText;
         private ImageView mProgressImage;
 
+        private static final int RESET_ITEM_ID = 1;
+        private static final int DELETE_ITEM_ID = 2;
+        private static final int LEARNED_ITEM_ID = 3;
+
         public CardViewHolder(View itemView) {
             super(itemView);
             mView = itemView;
@@ -134,38 +170,88 @@ public class CardAdapter extends RecyclerView.Adapter<CardAdapter.CardViewHolder
             mDefinitionText = itemView.findViewById(R.id.single_card_layout_text_definition);
             mDateAddText = itemView.findViewById(R.id.single_card_layout_text_date);
             mProgressImage = itemView.findViewById(R.id.single_card_layout_img_progress);
-
             mView.setOnCreateContextMenuListener(this);
-
         }
 
         @Override
         public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
-            //groupId, itemId, order, title
             menu.setHeaderTitle("Выберете пункт:");
-            MenuItem resetProgressItem = menu.add(0, 1, 0, "Сбросить прогресс");
-            MenuItem deleteItem = menu.add(0, 2, 0, "Удалить карточку");
-            resetProgressItem.setOnMenuItemClickListener(CardViewHolder.this);
-            deleteItem.setOnMenuItemClickListener(CardViewHolder.this);
+            MenuItem resetProgressItem = menu.add(0, RESET_ITEM_ID, 0, "Сбросить прогресс");
+         //   resetProgressItem.setOnMenuItemClickListener(CardViewHolder.this);
+            MenuItem deleteItem = menu.add(0, DELETE_ITEM_ID, 0, "Удалить карточку");
+       //     deleteItem.setOnMenuItemClickListener(CardViewHolder.this);
 
-
-
+            if(mCurrentVariant != StateCardVariant.FINISHED) {
+                MenuItem markAsLearnedItem = menu.add(0, LEARNED_ITEM_ID, 0, "Пометить как выученное");
+        //        markAsLearnedItem.setOnMenuItemClickListener(CardViewHolder.this);
+            }
         }
 
+     /*   private void reset(MenuItem item, boolean needToDelete){
+            if (RESET_ITEM_ID == item.getItemId()) {
+            //    resetProgress(mPosition, mProgressImage);
+                Toast.makeText(mContext, "Прогресс сброшен", Toast.LENGTH_SHORT).show();
+                if (needToDelete) {
+                //    mCards.remove(mPosition);
+                    notifyItemRemoved(mPosition);
+                    notifyDataSetChanged();
+                  //  mView.setVisibility(View.GONE);
+
+                } else {
+                    notifyItemChanged(mPosition);
+                }
+            }
+        }
+
+        private void mark(MenuItem item, boolean needToDelete){
+            if (LEARNED_ITEM_ID == item.getItemId()) {
+                markAsLearned(mPosition, mProgressImage);
+                Toast.makeText(mContext, "Помечено как выученное", Toast.LENGTH_SHORT).show();
+                if (needToDelete) {
+                   mCards.remove(mPosition);
+                    notifyDataSetChanged();
+               //     notifyItemRemoved(mPosition);
+                   // mView.setVisibility(View.GONE);
+                }else {
+                    notifyItemChanged(mPosition);
+                }
+            }
+        }
 
         @Override
         public boolean onMenuItemClick(MenuItem item) {
-            if (1 == item.getItemId()){
-                resetProgress(mPosition, mProgressImage);
-                Toast.makeText(mContext, "Прогресс сброшен", Toast.LENGTH_SHORT).show();
-                return true;
-            }else if (2 == item.getItemId()){
+            // Удалить слово (в любом случае одинаково)
+            if (DELETE_ITEM_ID == item.getItemId()) {
                 deleteCard(mPosition);
                 Toast.makeText(mContext, "Слово удалено", Toast.LENGTH_SHORT).show();
+               // notifyItemRemoved(mPosition);
+                mCards.remove(mPosition);
+                notifyDataSetChanged();
+                //mView.setVisibility(View.GONE);
+                //notifyItemChanged(mPosition);
                 return true;
             }
-          //  return this.onMenuItemClick(item);
+
+            switch (mCurrentVariant) {
+                case ALL:
+                    reset(item, false);
+                    mark(item, false);
+                    break;
+                case IN_PROGRESS:
+                    reset(item, false);
+                    mark(item, true);
+                    break;
+                case FINISHED:
+                    reset(item, true);
+                    break;
+                case FOR_REPEAT:
+                    reset(item, false);
+                    mark(item, true);
+                    break;
+            }
+
             return false;
-        }
+        }*/
+
     }
 }

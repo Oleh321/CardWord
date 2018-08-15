@@ -1,24 +1,40 @@
 package balychev.oleh.blch.cardword.model;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.GregorianCalendar;
 
-public class Card implements Parcelable{
+import balychev.oleh.blch.cardword.database.sqlite.DBColumns;
+
+public class Card{
     private Long id;
     private String frontSide;
     private String backSide;
-    private String dateAdd;
+    private Long dateAdd;
+    private Long dateRepeat;
     private Integer state;
 
-    public Card(Long id, String frontSide, String backSide, String dateAdd, Integer state) {
+    public Card(Long id, String frontSide, String backSide, Long dateAdd, Long dateRepeat, Integer state) {
         this.id = id;
         this.frontSide = frontSide;
         this.backSide = backSide;
         this.dateAdd = dateAdd;
+        this.dateRepeat = dateRepeat;
         this.state = state;
+    }
+
+    public Long getDateRepeat() {
+        return dateRepeat;
+    }
+
+    public void setDateRepeat(Long dateRepeat) {
+        this.dateRepeat = dateRepeat;
     }
 
     public Long getId() {
@@ -53,77 +69,37 @@ public class Card implements Parcelable{
         this.backSide = backSide;
     }
 
-    public String getDateAdd() {
+    public Long getDateAdd() {
         return dateAdd;
     }
 
-    public void setDateAdd(String dateAdd) {
+    public void setDateAdd(Long dateAdd) {
         this.dateAdd = dateAdd;
     }
 
+    @SuppressLint("SimpleDateFormat")
+    final static SimpleDateFormat FORMAT = new SimpleDateFormat(
+            "dd.MM.yyyy");
 
-
-    @Override
-    public String toString() {
-        return "Card{" +
-                "id=" + id +
-                ", frontSide='" + frontSide + '\'' +
-                ", backSide='" + backSide + '\'' +
-                ", dateAdd='" + dateAdd + '\'' +
-                ", state=" + state +
-                '}';
+    public static String getDateInFormat(Long date){
+        GregorianCalendar calendar = new GregorianCalendar();
+        calendar.setTimeInMillis(date);
+        return FORMAT.format(calendar.getTime());
     }
 
-    protected Card(Parcel in) {
-        if (in.readByte() == 0) {
-            id = null;
-        } else {
-            id = in.readLong();
-        }
-        frontSide = in.readString();
-        backSide = in.readString();
-        dateAdd = in.readString();
-        if (in.readByte() == 0) {
-            state = null;
-        } else {
-            state = in.readInt();
-        }
+    public static Card parseCursor(Cursor c){
+        if(c==null)
+            return null;
+        return new Card(
+                Long.parseLong(c.getString(c.getColumnIndex(DBColumns.COLUMN_CARD_ID))),
+                c.getString(c.getColumnIndex(DBColumns.COLUMN_FRONT_SIDE)),
+                c.getString(c.getColumnIndex(DBColumns.COLUMN_BACK_SIDE)),
+                Long.parseLong(c.getString(c.getColumnIndex(DBColumns.COLUMN_DATE_ADD))),
+                Long.parseLong(c.getString(c.getColumnIndex(DBColumns.COLUMN_REPEAT_DATE))),
+                Integer.parseInt(c.getString(c.getColumnIndex(DBColumns.COLUMN_STATE_ID)))
+        );
     }
 
-    public static final Creator<Card> CREATOR = new Creator<Card>() {
-        @Override
-        public Card createFromParcel(Parcel in) {
-            return new Card(in);
-        }
 
-        @Override
-        public Card[] newArray(int size) {
-            return new Card[size];
-        }
-    };
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        if (id == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeLong(id);
-        }
-        dest.writeString(frontSide);
-        dest.writeString(backSide);
-        dest.writeString(dateAdd);
-        if (state == null) {
-            dest.writeByte((byte) 0);
-        } else {
-            dest.writeByte((byte) 1);
-            dest.writeInt(state);
-        }
-    }
 }
 

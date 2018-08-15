@@ -6,18 +6,10 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.PagerAdapter;
-import android.support.v4.view.PagerTabStrip;
-import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -29,14 +21,10 @@ import android.widget.ImageView;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
-import java.util.ArrayList;
-
 import balychev.oleh.blch.cardword.R;
 import balychev.oleh.blch.cardword.adapter.CardAdapter;
+import balychev.oleh.blch.cardword.data.CardCursorLab;
 import balychev.oleh.blch.cardword.database.sqlite.CardDatabaseController;
-import balychev.oleh.blch.cardword.model.Card;
 import balychev.oleh.blch.cardword.utils.StateCardVariant;
 
 public class DictionaryPagerFragment extends Fragment {
@@ -70,7 +58,9 @@ public class DictionaryPagerFragment extends Fragment {
 
     private CardAdapter mCardAdapter;
 
-    private ArrayList<Card> mCards;
+    private CardDatabaseController mController;
+
+    private CardCursorLab mCursorLab;
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -83,9 +73,6 @@ public class DictionaryPagerFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mCards = new ArrayList<>();
-        mCardAdapter = new CardAdapter(getContext(), mCards);
-
         if (savedInstanceState == null) {
             mCurrentPage = 0;
             mSearchOption = 0;
@@ -95,6 +82,12 @@ public class DictionaryPagerFragment extends Fragment {
             mIsShowSearch = savedInstanceState.getBoolean(SHOW_SEARCH);
             mSearchOption = savedInstanceState.getInt(SEARCH_OPTION);
         }
+
+        mController = new CardDatabaseController(getContext());
+        mCursorLab = CardCursorLab.getInstance();
+        mCursorLab.setCursor(mController.getAllCards(getVariant(mCurrentPage)));
+
+        mCardAdapter = new CardAdapter(getContext(), mCursorLab.getCursor(), getVariant(mCurrentPage));
         setHasOptionsMenu(true);
     }
 
@@ -109,8 +102,6 @@ public class DictionaryPagerFragment extends Fragment {
         mRecyclerView = view.findViewById(R.id.fg_dictionary_pager_recycler_view);
         mScrollView = view.findViewById(R.id.fg_dictionary_pager_scroll_view);
 
-        refreshAdapter("");
-
         for(String title : pagesTitle){
             mTabLayout.addTab(mTabLayout.newTab().setText(title));
         }
@@ -123,15 +114,13 @@ public class DictionaryPagerFragment extends Fragment {
             }
 
             @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
+            public void onTabUnselected(TabLayout.Tab tab) {  }
 
             @Override
-            public void onTabReselected(TabLayout.Tab tab) {
+            public void onTabReselected(TabLayout.Tab tab) {  }
 
-            }
         });
+
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         mRecyclerView.setAdapter(mCardAdapter);
         mRecyclerView.getAdapter().notifyDataSetChanged();
@@ -151,8 +140,14 @@ public class DictionaryPagerFragment extends Fragment {
             }
         });
         mSearchEditText.setHint("Поиск по слову");
-
+        refreshAdapter("");
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
     }
 
     private StateCardVariant getVariant(int position){
@@ -171,29 +166,24 @@ public class DictionaryPagerFragment extends Fragment {
         return variant;
     }
 
-    private void refreshAdapter(String s){
-        reload(s.toString().trim().equals("")? null : s.toString(), getVariant(mCurrentPage));
-        mCardAdapter.setCards(mCards);
-        mCardAdapter.notifyDataSetChanged();
-
+     private void refreshAdapter(final String s){
+        reload(s.trim().equals("")? null : s, getVariant(mCurrentPage));
+        mCursorLab.setCursor(mController.getAllCards(getVariant(mCurrentPage)));
+        mCardAdapter.changeCursor(mCursorLab.getCursor());
+        mCardAdapter.setCurrentVariant(getVariant(mCurrentPage));
+        mRecyclerView.getAdapter().notifyDataSetChanged();
+        checkIfExist(mCursorLab.getCursor().getCount());
+        mScrollView.smoothScrollTo(0,0);
     }
 
     private void reload(String word, StateCardVariant variant) {
-        //Запрос к база данных
 
-        CardDatabaseController controller = new CardDatabaseController(getContext());
         if (word == null) {
-            mCards = controller.getCards(variant);
+            mCursorLab.setCursor(mController.getAllCards(variant));
         } else {
-            mCards = controller.getCardsByWord(variant, word, mSearchOption);
+            mCursorLab.setCursor(mController.searchCards(variant, word, mSearchOption));
         }
-        controller.close();
 
-        mCardAdapter.setCards(mCards);
-        mRecyclerView.setAdapter(mCardAdapter);
-        mRecyclerView.getAdapter().notifyDataSetChanged();
-        checkIfExist(mCards.size());
-        mScrollView.smoothScrollTo(0,0);
     }
 
     private void checkIfExist(int size){
